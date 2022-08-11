@@ -47,18 +47,37 @@ class NiryoOne(Robot):
 
     def get_arm_position(self):
         full_dofs_positions = self.get_joint_positions()
+        arm_joint_positions = [full_dofs_positions[i] for i in self._arm_dof_indices]
+        return arm_joint_positions
 
     def set_arm_position(self, positions) -> None:
-        pass
+        full_dofs_positions = [None] * self.num_dof
+        for i in range(self._num_arm_dof):
+            full_dofs_positions[self._arm_dof_indices[i]] = positions[i]
+        self.set_joint_positions(positions=np.array(full_dofs_positions))
+        return
 
-    def get_arm_velocity(self):
-        pass
+    # def get_arm_velocity(self):
+    #     pass
 
-    def set_arm_velocity(self, velocities) -> None:
-        pass
+    # def set_arm_velocity(self, velocities) -> None:
+    #     pass
 
     def apply_arm_actions(self, actions: ArticulationAction) -> None:
-        pass
+        actions_length = actions.get_length()
+        if actions_length is not None and actions_length != self._num_arm_dof:
+            raise Exception("ArticulationAction passed should be the same length as the number of wheels")
+        joint_actions = ArticulationAction()
+        if actions.joint_positions is not None:
+            joint_actions.joint_positions = np.zeros(self.num_dof)  # for all dofs of the robot
+            for i in range(self._num_arm_dof):  # set only the ones that are the wheels
+                joint_actions.joint_positions[self._arm_dof_indices[i]] = actions.joint_positions[i]
+        if actions.joint_efforts is not None:
+            joint_actions.joint_efforts = np.zeros(self.num_dof)
+            for i in range(self._num_arm_dof):
+                joint_actions.joint_efforts[self._arm_dof_indices[i]] = actions.joint_efforts[i]
+        self.apply_action(control_actions=joint_actions)
+        return
 
     def initialize(self, physics_sim_view=None) -> None:
         super().initialize(physics_sim_view=physics_sim_view)
@@ -82,7 +101,5 @@ class NiryoOne(Robot):
         # self._articulation_controller.switch_dof_control_mode(dof_index=self.gripper.dof_indices[1], mode="position")
         return
 
-# Notes
-# Add Articulation root to the base of the robot;
-# See https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/tutorial_gui_simple_robot.html
-
+    def get_articulation_controller_properties(self):
+        return self._arm_dof_indices, self._arm_dof_indices
