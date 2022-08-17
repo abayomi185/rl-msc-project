@@ -4,7 +4,7 @@ from omni.isaac.core.robots.robot import Robot
 from omni.isaac.core.utils.types import ArticulationAction
 from omni.isaac.core.articulations import ArticulationGripper
 from omni.isaac.core.prims.rigid_prim import RigidPrim
-from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.core.utils.prims import get_prim_at_path, define_prim
 from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage, get_stage_units
 import carb
@@ -31,8 +31,10 @@ class NiryoOne(Robot):
         self._gripper = None
         self._end_effector_prim_name = end_effector_prim_name
         if not prim.IsValid():
+            prim = define_prim(prim_path, "Xform")
             if usd_path:
-                add_reference_to_stage(usd_path=usd_path, prim_path=prim_path)
+                # add_reference_to_stage(usd_path=usd_path, prim_path=prim_path)
+                prim.GetReferences().AddReference(usd_path)
             else:
                 carb.log_error("No valid usd path defined to create Niryo One.")
         else:
@@ -57,7 +59,7 @@ class NiryoOne(Robot):
     def arm_dof_indices(self) -> np.ndarray:
         return self._arm_dof_indices
 
-    def get_arm_position(self):
+    def get_arm_positions(self):
         full_dofs_positions = self.get_joint_positions()
         arm_joint_positions = [full_dofs_positions[i] for i in self._arm_dof_indices]
         return arm_joint_positions
@@ -77,26 +79,35 @@ class NiryoOne(Robot):
 
     def apply_arm_actions(self, actions: ArticulationAction) -> None:
         actions_length = actions.get_length()
+
+        # print("++++++++++")
+        # print(actions)
+        # print(self._num_arm_dof)
+        # print("++++++++++")
+
         if actions_length is not None and actions_length != self._num_arm_dof:
             raise Exception("ArticulationAction passed should be the same length as the number of wheels")
+
         joint_actions = ArticulationAction()
         if actions.joint_positions is not None:
             joint_actions.joint_positions = np.zeros(self.num_dof)  # for all dofs of the robot
             for i in range(self._num_arm_dof):  # set only the ones that are the wheels
                 joint_actions.joint_positions[self._arm_dof_indices[i]] = actions.joint_positions[i]
-        if actions.joint_efforts is not None:
-            joint_actions.joint_efforts = np.zeros(self.num_dof)
-            for i in range(self._num_arm_dof):
-                joint_actions.joint_efforts[self._arm_dof_indices[i]] = actions.joint_efforts[i]
+
         self.apply_action(control_actions=joint_actions)
         return
 
     def initialize(self, physics_sim_view=None) -> None:
+        # print("++++++++++")
+        # print(self.prim_path)
         super().initialize(physics_sim_view=physics_sim_view)
+        # print("++++++++++")
+
+        # print(self._arm_dof_names)
 
         # TODO
         if self._arm_dof_names is not None:
-            self._arm_dof_names = [
+            self._arm_dof_indices = [
                 self.get_dof_index(self._arm_dof_names[i]) for i in range(len(self._arm_dof_names))
             ]
         elif self._arm_dof_indices is None:
@@ -114,4 +125,4 @@ class NiryoOne(Robot):
         return
 
     def get_articulation_controller_properties(self):
-        return self._arm_dof_indices, self._arm_dof_indices
+        return self._arm_dof_names, self._arm_dof_indices
