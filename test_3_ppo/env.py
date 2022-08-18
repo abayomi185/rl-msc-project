@@ -50,7 +50,7 @@ class NiryoOneEnv(gym.Env):
             NiryoOne(
                 prim_path="/niryo_one",
                 name="my_niryo",
-                arm_dof_names=["joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"],
+                arm_dof_names=["joint_1", "joint_2", "joint_3", "joint_4", "joint_5"],
                 usd_path=niryo_asset_path,
                 position=np.array([0.0, 0.0, 0.0]),
                 orientation=np.array([1.0, 0.0, 0.0, 0.0]),
@@ -73,8 +73,20 @@ class NiryoOneEnv(gym.Env):
         self._set_cameras()
 
         self.reward_range = (-float("inf"), float("inf"))
-        self.action_space = spaces.Box(low=-10.0, high=10.0, shape=(6,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-10.0, high=10.0, shape=(5,), dtype=np.float32)
+
+        # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
+
         self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
+
+        # Two images in dict
+        # self.observation_space = spaces.Dict(
+        #     spaces={
+        #         "cam_realsense": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
+        #         "cam_end_effector": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
+        #     }
+        # )
+
         gym.Env.__init__(self)
 
         return
@@ -84,7 +96,8 @@ class NiryoOneEnv(gym.Env):
 
     # TODO
     def step(self, action):
-        previous_arm_position, _ = self.niryo.get_world_pose()
+        # previous_arm_position, _ = self.niryo.get_world_pose()
+        previous_arm_position = self.niryo.get_base_gripper_position()
 
         # print("+++Action: ")
         # print(action)
@@ -103,20 +116,43 @@ class NiryoOneEnv(gym.Env):
 
         goal_arm_position, _ = self.goal.get_world_pose()
         # TODO - this pose likely needs to change.
-        current_arm_position, _ = self.niryo.get_world_pose()
+        # current_arm_position, _ = self.niryo.get_world_pose()
+        current_arm_position = self.niryo.get_base_gripper_position()
+
+        # print("===========")
+        # print("position")
+        # print(goal_arm_position)
+        # print(current_arm_position)
+        # print("===========")
 
         previous_dist_to_goal = np.linalg.norm(goal_arm_position - previous_arm_position)
+
         current_dist_to_goal = np.linalg.norm(goal_arm_position - current_arm_position)
 
-        reward = previous_dist_to_goal - current_dist_to_goal
+        test_reward = np.linalg.norm(goal_arm_position - current_arm_position)
+
+        # print("+++++++++++")
+        # print("diff")
+        # print(previous_dist_to_goal)
+        # print(current_dist_to_goal)
+        # print("+++++++++++")
+
+        reward = (previous_dist_to_goal - current_dist_to_goal) + (1/test_reward)
+
+        # print("------------")
+        # # print(reward)
+        # print(test_reward)
+        # print("------------")
+
         return observations, reward, done, info
 
     def reset(self):
         self._my_world.reset()
         # randomize goal location in circle around robot
         alpha = 2 * math.pi * np.random.rand()
-        r = 1.00 * math.sqrt(np.random.rand()) - 0.20
-        self.goal.set_world_pose(np.array([math.sin(alpha) * r, math.cos(alpha) * r, 0.025]))
+        r = 0.25 * math.sqrt(np.random.rand()) + 0.1
+        h = 0.6 * math.sqrt(np.random.rand())
+        self.goal.set_world_pose(np.array([math.sin(alpha) * r, math.cos(alpha) * r, h]))
         observations = self.get_observations()
         return observations
 
@@ -131,12 +167,19 @@ class NiryoOneEnv(gym.Env):
             ["rgb"], self.viewport_window_2, verify_sensor_init=False, wait_for_sensor_data=0
         )
 
-        print("++++++")
-        print(gt)
-        print(gt2)
-        print("++++++")
+        # return gt["rgb"][:, :, :3], gt2["rgb"][:, :, :3]
 
-        return gt["rgb"][:, :, :3]
+        return np.pad(np.concatenate((
+            gt["rgb"][:, :, :3],
+            gt2["rgb"][:, :, :3]), axis=0),
+            pad_width=[(0, 0), (64, 64), (0, 0)],
+            mode='constant')
+
+        # return {
+        #     "cam_realsense": gt["rgb"][:, :, :3],
+        #     "cam_end_effector": gt2["rgb"][:, :, :3]
+        # }
+
 
     def render(self, mode="human"):
         return
@@ -163,25 +206,34 @@ class NiryoOneEnv(gym.Env):
         camera_path_1 = "/niryo_one/base_link/realsense"
         camera_1 = UsdGeom.Camera(get_current_stage().GetPrimAtPath(camera_path_1))
         camera_1.GetClippingRangeAttr().Set((0.01, 10000))
+        camera_1.GetHorizontalApertureAttr().Set(69.4)
+        camera_1.GetVerticalApertureAttr().Set(42.5)
+        camera_1.GetFocalLengthAttr().Set(50)
+        camera_1.GetFocusDistanceAttr().Set(30)
 
         camera_path_2 = "/niryo_one/camera_link/end_effector_camera"
         camera_2 = UsdGeom.Camera(get_current_stage().GetPrimAtPath(camera_path_2))
         camera_2.GetClippingRangeAttr().Set((0.01, 10000))
+        camera_2.GetHorizontalApertureAttr().Set(12.8)
+        camera_2.GetVerticalApertureAttr().Set(11.6)
+        camera_2.GetFocalLengthAttr().Set(10)
+        camera_2.GetFocusDistanceAttr().Set(5.0)
+
 
         if self.headless:
             viewport_handle = omni.kit.viewport_legacy.get_viewport_interface()
             viewport_handle.get_viewport_window().set_active_camera(str(camera_path_1))
             viewport_window = viewport_handle.get_viewport_window()
 
-            viewport_handle_2 = omni.kit.viewport_legacy.get_viewport_interface().get_instance('Viewport')
+            viewport_handle_2 = omni.kit.viewport_legacy.get_viewport_interface()
             viewport_handle_2.get_viewport_window().set_active_camera(str(camera_path_2))
             viewport_window_2 = viewport_handle_2.get_viewport_window()
 
             self.viewport_window = viewport_window
             self.viewport_window_2 = viewport_window_2
 
-            viewport_window.set_texture_resolution(256, 256)
-            viewport_window_2.set_texture_resolution(256, 256)
+            viewport_window.set_texture_resolution(128, 128)
+            viewport_window_2.set_texture_resolution(128, 128)
 
         # TODO - Implement changes for multi-camera for non-headless here
         else:
@@ -194,8 +246,8 @@ class NiryoOneEnv(gym.Env):
             viewport_window.set_active_camera(camera_path_1)
             viewport_window_2.set_active_camera(camera_path_2)
 
-            viewport_window.set_texture_resolution(256, 256)
-            viewport_window_2.set_texture_resolution(256, 256)
+            viewport_window.set_texture_resolution(128, 128)
+            viewport_window_2.set_texture_resolution(128, 128)
 
             viewport_window.set_window_pos(1000, 400)
             viewport_window.set_window_size(420, 420)

@@ -1,10 +1,12 @@
 from env import NiryoOneEnv
 from stable_baselines3 import PPO
 
-policy_path = "./cnn_policy/niryo_policy.zip"
+policy_dir = "./mip_policy/niryo_policy_checkpoint_"
+
+poliicy_path = "470000_steps"
 
 my_env = NiryoOneEnv(headless=False)
-model = PPO.load(policy_path)
+model = PPO.load(policy_dir + poliicy_path)
 
 for _ in range(20):
     obs = my_env.reset()

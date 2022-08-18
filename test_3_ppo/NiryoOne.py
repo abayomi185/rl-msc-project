@@ -71,6 +71,11 @@ class NiryoOne(Robot):
         self.set_joint_positions(positions=np.array(full_dofs_positions))
         return
 
+    def get_base_gripper_position(self) -> np.ndarray:
+        object = self._dc_interface.get_rigid_body("/niryo_one/base_gripper_1")
+        object_pose = self._dc_interface.get_rigid_body_pose(object)
+        return object_pose.p
+
     # def get_arm_velocity(self):
     #     pass
 
