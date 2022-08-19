@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test", default=False, action="store_true", help="Run in test mode")
 args, unknown = parser.parse_known_args()
 
-log_dir = "./mip_policy1"
+log_dir = "./mip_policy2"
 # set headles to false to visualize training
 my_env = NiryoOneEnv(headless=False)
 # my_env = make_vec_env(NiryoOneEnv, n_envs=4, env_kwargs=dict(headless=False))
@@ -20,10 +20,10 @@ my_env = NiryoOneEnv(headless=False)
 policy_kwargs = dict(activation_fn=th.nn.Tanh, net_arch=[16, dict(pi=[64, 32], vf=[64, 32])])
 
 # TODO - Policy important for observation space
-policy = CnnPolicy
-# policy = MultiInputPolicy
+# policy = CnnPolicy
+policy = MultiInputPolicy
 
-total_timesteps = 500000
+total_timesteps = 1000000
 
 if args.test is True:
     total_timesteps = 10000

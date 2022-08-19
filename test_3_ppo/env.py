@@ -8,7 +8,8 @@ import math
 import carb
 
 class NiryoOneEnv(gym.Env):
-    metadata: Dict[str, List[str]] = {"render.modes": ["human"]}
+    # metadata: Dict[str, List[str]] = {"render.modes": ["human"]}
+    metadata: Dict[str, List[str]] = {"render.modes": ["human"], "renderer": "RayTracedLighting"}
 
     def __init__(
         self,
@@ -43,7 +44,7 @@ class NiryoOneEnv(gym.Env):
             return
         # niryo_asset_path = assets_root_path + "/niryo/niryo_one_main.usd"
         # niryo_asset_path = assets_root_path + "/niryo/niryo_one_mod.usd"
-        niryo_asset_path = assets_root_path + "/niryo/niryo_one_gripper1_n_camera/niryo_one_gripper1_n_camera.usd"
+        niryo_asset_path = assets_root_path + "/niryo/mod_niryo_one_gripper1_n_camera/niryo_one_gripper1_n_camera.usd"
 
         # TODO - Pass arm_dof_names
         self.niryo = self._my_world.scene.add(
@@ -77,7 +78,7 @@ class NiryoOneEnv(gym.Env):
 
         # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
 
-        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
+        # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
 
         # Two images in dict
         # self.observation_space = spaces.Dict(
@@ -86,6 +87,14 @@ class NiryoOneEnv(gym.Env):
         #         "cam_end_effector": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
         #     }
         # )
+
+        # Image and depth dict
+        self.observation_space = spaces.Dict(
+            spaces={
+                "realsense_vision": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
+                "realsense_depth": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
+            }
+        )
 
         gym.Env.__init__(self)
 
@@ -137,7 +146,10 @@ class NiryoOneEnv(gym.Env):
         # print(current_dist_to_goal)
         # print("+++++++++++")
 
-        reward = (previous_dist_to_goal - current_dist_to_goal) + (1/test_reward)
+        # reward = (previous_dist_to_goal - current_dist_to_goal) + (1/test_reward)
+
+        # increase reward for being closer to the cube
+        reward = (previous_dist_to_goal - current_dist_to_goal) + (10/test_reward)
 
         # print("------------")
         # # print(reward)
@@ -159,26 +171,29 @@ class NiryoOneEnv(gym.Env):
     def get_observations(self):
         self._my_world.render()
         # wait_for_sensor_data is recommended when capturing multiple sensors, in this case we can set it to zero as we only need RGB
+
         gt = self.sd_helper.get_groundtruth(
-            ["rgb"], self.viewport_window, verify_sensor_init=False, wait_for_sensor_data=0
+            ["rgb", "depth"], self.viewport_window, verify_sensor_init=False, wait_for_sensor_data=0
         )
 
-        gt2 = self.sd_helper.get_groundtruth(
-            ["rgb"], self.viewport_window_2, verify_sensor_init=False, wait_for_sensor_data=0
-        )
+        # gt = self.sd_helper.get_groundtruth(
+        #     ["rgb"], self.viewport_window_2, verify_sensor_init=False, wait_for_sensor_data=0
+        # )
+
+        # print(gt2["depth"].shape) # the width and height of the image
 
         # return gt["rgb"][:, :, :3], gt2["rgb"][:, :, :3]
 
-        return np.pad(np.concatenate((
-            gt["rgb"][:, :, :3],
-            gt2["rgb"][:, :, :3]), axis=0),
-            pad_width=[(0, 0), (64, 64), (0, 0)],
-            mode='constant')
+        # return np.pad(np.concatenate((
+        #     gt["rgb"][:, :, :3],
+        #     gt2["rgb"][:, :, :3]), axis=0),
+        #     pad_width=[(0, 0), (64, 64), (0, 0)],
+        #     mode='constant')
 
-        # return {
-        #     "cam_realsense": gt["rgb"][:, :, :3],
-        #     "cam_end_effector": gt2["rgb"][:, :, :3]
-        # }
+        return {
+            "realsense_vision": gt["rgb"][:, :, :3],
+            "realsense_depth": gt["depth"][:, :]
+        }
 
 
     def render(self, mode="human"):
@@ -226,14 +241,14 @@ class NiryoOneEnv(gym.Env):
             viewport_window = viewport_handle.get_viewport_window()
 
             viewport_handle_2 = omni.kit.viewport_legacy.get_viewport_interface()
-            viewport_handle_2.get_viewport_window().set_active_camera(str(camera_path_2))
-            viewport_window_2 = viewport_handle_2.get_viewport_window()
+            # viewport_handle_2.get_viewport_window().set_active_camera(str(camera_path_2))
+            # viewport_window_2 = viewport_handle_2.get_viewport_window()
 
             self.viewport_window = viewport_window
-            self.viewport_window_2 = viewport_window_2
+            # self.viewport_window_2 = viewport_window_2
 
-            viewport_window.set_texture_resolution(128, 128)
-            viewport_window_2.set_texture_resolution(128, 128)
+            viewport_window.set_texture_resolution(256, 256)
+            # viewport_window_2.set_texture_resolution(128, 128)
 
         # TODO - Implement changes for multi-camera for non-headless here
         else:
@@ -244,23 +259,23 @@ class NiryoOneEnv(gym.Env):
             viewport_window_2 = omni.kit.viewport_legacy.get_viewport_interface().get_viewport_window(viewport_handle_2)
 
             viewport_window.set_active_camera(camera_path_1)
-            viewport_window_2.set_active_camera(camera_path_2)
+            # viewport_window_2.set_active_camera(camera_path_2)
 
-            viewport_window.set_texture_resolution(128, 128)
-            viewport_window_2.set_texture_resolution(128, 128)
+            viewport_window.set_texture_resolution(256, 256)
+            # viewport_window_2.set_texture_resolution(256, 256)
 
             viewport_window.set_window_pos(1000, 400)
             viewport_window.set_window_size(420, 420)
-            viewport_window_2.set_window_pos(800, 400)
-            viewport_window_2.set_window_size(420, 420)
+            # viewport_window_2.set_window_pos(800, 400)
+            # viewport_window_2.set_window_size(420, 420)
 
             self.viewport_window = viewport_window
-            self.viewport_window_2 = viewport_window_2
+            # self.viewport_window_2 = viewport_window_2
 
         self.sd_helper = SyntheticDataHelper()
-        self.sd_helper.initialize(sensor_names=["rgb"], viewport=self.viewport_window)
-        self.sd_helper.initialize(sensor_names=["rgb"], viewport=self.viewport_window_2)
+        self.sd_helper.initialize(sensor_names=["rgb", "depth"], viewport=self.viewport_window)
+        # self.sd_helper.initialize(sensor_names=["rgb"], viewport=self.viewport_window_2)
         self._my_world.render()
-        self.sd_helper.get_groundtruth(["rgb"], self.viewport_window)
-        self.sd_helper.get_groundtruth(["rgb"], self.viewport_window_2)
+        self.sd_helper.get_groundtruth(["rgb", "depth"], self.viewport_window)
+        # self.sd_helper.get_groundtruth(["rgb"], self.viewport_window_2)
         return
