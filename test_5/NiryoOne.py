@@ -45,6 +45,7 @@ class NiryoOne(Robot):
         )
         self._arm_dof_names = arm_dof_names
         self._arm_dof_indices = arm_dof_indices
+        self.set_cameras()
 
         # Enables Gripper
         if gripper_dof_names is not None:
@@ -125,3 +126,73 @@ class NiryoOne(Robot):
 
     def get_articulation_controller_properties(self):
         return self._arm_dof_names, self._arm_dof_indices
+
+    def set_cameras(self):
+        import omni.kit
+        from pxr import UsdGeom
+        from omni.isaac.synthetic_utils import SyntheticDataHelper
+        from omni.isaac.core.utils.stage import get_current_stage
+
+        # from omni.isaac.core.utils.stage import print_stage_prim_paths
+        # print_stage_prim_paths()
+
+        camera_path_1 = self.prim_path + "/base_link/realsense"
+        camera_1 = UsdGeom.Camera(get_current_stage().GetPrimAtPath(camera_path_1))
+        camera_1.GetClippingRangeAttr().Set((0.01, 10000))
+        camera_1.GetHorizontalApertureAttr().Set(69.4)
+        camera_1.GetVerticalApertureAttr().Set(42.5)
+        camera_1.GetFocalLengthAttr().Set(50)
+        camera_1.GetFocusDistanceAttr().Set(30)
+
+        camera_path_2 = self.prim_path + "/camera_link/end_effector_camera"
+        camera_2 = UsdGeom.Camera(get_current_stage().GetPrimAtPath(camera_path_2))
+        camera_2.GetClippingRangeAttr().Set((0.01, 10000))
+        camera_2.GetHorizontalApertureAttr().Set(12.8)
+        camera_2.GetVerticalApertureAttr().Set(11.6)
+        camera_2.GetFocalLengthAttr().Set(10)
+        camera_2.GetFocusDistanceAttr().Set(5.0)
+
+        if self.headless:
+            viewport_handle = omni.kit.viewport_legacy.get_viewport_interface()
+            viewport_handle.get_viewport_window().set_active_camera(str(camera_path_1))
+            viewport_window = viewport_handle.get_viewport_window()
+
+            viewport_handle_2 = omni.kit.viewport_legacy.get_viewport_interface()
+            # viewport_handle_2.get_viewport_window().set_active_camera(str(camera_path_2))
+            # viewport_window_2 = viewport_handle_2.get_viewport_window()
+
+            self.viewport_window = viewport_window
+            # self.viewport_window_2 = viewport_window_2
+
+            viewport_window.set_texture_resolution(256, 256)
+            # viewport_window_2.set_texture_resolution(128, 128)
+
+        # TODO - Implement changes for multi-camera for non-headless here
+        else:
+            viewport_handle = omni.kit.viewport_legacy.get_viewport_interface().create_instance()
+            viewport_handle_2 = omni.kit.viewport_legacy.get_viewport_interface().get_instance('Viewport')
+
+            viewport_window = omni.kit.viewport_legacy.get_viewport_interface().get_viewport_window(viewport_handle)
+            viewport_window_2 = omni.kit.viewport_legacy.get_viewport_interface().get_viewport_window(viewport_handle_2)
+
+            viewport_window.set_active_camera(camera_path_1)
+            # viewport_window_2.set_active_camera(camera_path_2)
+
+            viewport_window.set_texture_resolution(256, 256)
+            # viewport_window_2.set_texture_resolution(256, 256)
+
+            # viewport_window.set_window_pos(1000, 400)
+            # viewport_window.set_window_size(420, 420)
+            # viewport_window_2.set_window_pos(800, 400)
+            # viewport_window_2.set_window_size(420, 420)
+
+            self.viewport_window = viewport_window
+            # self.viewport_window_2 = viewport_window_2
+
+        self.sd_helper = SyntheticDataHelper()
+        self.sd_helper.initialize(sensor_names=["rgb", "depth"], viewport=self.viewport_window)
+        # self.sd_helper.initialize(sensor_names=["rgb"], viewport=self.viewport_window_2)
+        # self._my_world.render()
+        # self.sd_helper.get_groundtruth(["rgb", "depth"], self.viewport_window)
+        # self.sd_helper.get_groundtruth(["rgb"], self.viewport_window_2)
+        return

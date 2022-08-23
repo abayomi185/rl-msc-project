@@ -7,11 +7,13 @@ from stable_baselines3.common.env_util import make_vec_env
 import torch as th
 import argparse
 
+from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--test", default=False, action="store_true", help="Run in test mode")
 args, unknown = parser.parse_known_args()
 
-log_dir = "./mip_policy5"
+log_dir = "./mip_policy4"
 # set headles to false to visualize training
 my_env = NiryoOneEnv(headless=True)
 # my_env = make_vec_env(NiryoOneEnv, n_envs=4, env_kwargs=dict(headless=False))
@@ -19,10 +21,10 @@ my_env = NiryoOneEnv(headless=True)
 policy_kwargs = dict(activation_fn=th.nn.Tanh, net_arch=[16, dict(pi=[64, 32], vf=[64, 32])])
 
 # TODO - Policy important for observation space
-policy = CnnPolicy
-# policy = MultiInputPolicy
+# policy = CnnPolicy
+policy = MultiInputPolicy
 
-total_timesteps = 500000
+total_timesteps = 10000000
 
 if args.test is True:
     total_timesteps = 10000

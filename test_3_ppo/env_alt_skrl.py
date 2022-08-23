@@ -62,7 +62,7 @@ class NiryoOneEnv(gym.Env):
                 prim_path="/new_cube_1",
                 name="visual_cube",
                 position=np.array([0.60, 0.30, 0.025]),
-                size=np.array([0.08, 0.08, 0.08]),
+                size=np.array([0.05, 0.05, 0.05]),
                 color=np.array([1.0, 0, 0]),
             )
         )
@@ -78,23 +78,15 @@ class NiryoOneEnv(gym.Env):
 
         # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
 
-        # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
-
-        # Two images in dict
-        # self.observation_space = spaces.Dict(
-        #     spaces={
-        #         "cam_realsense": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
-        #         "cam_end_effector": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
-        #     }
-        # )
+        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 4), dtype=np.uint8)
 
         # Image and depth dict
-        self.observation_space = spaces.Dict(
-            spaces={
-                "realsense_vision": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
-                "realsense_depth": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
-            }
-        )
+        # self.observation_space = spaces.Dict(
+        #     spaces={
+        #         "realsense_vision": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
+        #         "realsense_depth": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
+        #     }
+        # )
 
         gym.Env.__init__(self)
 
@@ -146,16 +138,10 @@ class NiryoOneEnv(gym.Env):
         # print(current_dist_to_goal)
         # print("+++++++++++")
 
-        # reward = (previous_dist_to_goal - current_dist_to_goal)
-
-        addon_reward = (1/test_reward) if (1/test_reward) < 0.5 else -(1/test_reward)
-
-        reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
-        
         # increase reward for being closer to the cube
-        # reward = (previous_dist_to_goal - current_dist_to_goal) + (10/test_reward)
+        # reward = (previous_dist_to_goal - current_dist_to_goal) + (1 / test_reward)
 
-        # reward = 1 / (test_reward ** 2)
+        reward = 1 / (test_reward ** 2)
 
         # print("------------")
         # # print(reward)
@@ -190,21 +176,10 @@ class NiryoOneEnv(gym.Env):
 
         # return gt["rgb"][:, :, :3], gt2["rgb"][:, :, :3]
 
-        # return np.pad(np.concatenate((
-        #     gt["rgb"][:, :, :3],
-        #     gt2["rgb"][:, :, :3]), axis=0),
-        #     pad_width=[(0, 0), (64, 64), (0, 0)],
-        #     mode='constant')
-
-        # return {
-        #     "realsense_vision": gt["rgb"][:, :, :3],
-        #     "realsense_depth": gt["depth"][:, :]
-        # }
-
         gt_depth = np.multiply(gt["depth"][:, :], 100)
 
+        # return np.dstack((gt["rgb"][:, :, :3], gt["depth"][:, :]))
         return np.dstack((gt["rgb"][:, :, :3], gt_depth))
-
 
     def render(self, mode="human"):
         return
