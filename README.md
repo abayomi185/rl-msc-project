@@ -13,4 +13,4 @@ runs 20-08-22 18:19 - reward function -> reward = `1 / (test_reward ** 2)`
 
 mip_policy4 - reward function -> reward = `1 / (test_reward ** 2)`
 
-mip_policy5 - CNNPolicy with concatenated image and depth
+mip_policy5 - CNNPolicy with concatenated image and depth. Reward is changed as well
