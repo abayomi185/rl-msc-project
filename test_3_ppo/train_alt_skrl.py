@@ -3,6 +3,8 @@ from env_alt_skrl import NiryoOneEnv
 import torch
 import torch.nn as nn
 
+import gym
+
 # Import the skrl components to build the RL system
 from skrl.models.torch import DeterministicModel, GaussianModel
 from skrl.memories.torch import RandomMemory
@@ -81,6 +83,9 @@ class Value(DeterministicModel):
 
 
 # Load and wrap the JetBot environment (a subclass of Gym)
+
+gym.make()
+
 env = NiryoOneEnv(headless=True)
 env = wrap_env(env)
 

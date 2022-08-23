@@ -44,7 +44,7 @@ class NiryoOneEnv(gym.Env):
             return
         # niryo_asset_path = assets_root_path + "/niryo/niryo_one_main.usd"
         # niryo_asset_path = assets_root_path + "/niryo/niryo_one_mod.usd"
-        niryo_asset_path = assets_root_path + "/niryo/mod_niryo_one_gripper1_n_camera/niryo_one_gripper1_n_camera.usd"
+        niryo_asset_path = assets_root_path + "/niryo/niryo_one_gripper1_n_camera/niryo_one_gripper1_n_camera.usd"
 
         # TODO - Pass arm_dof_names
         self.niryo = self._my_world.scene.add(
@@ -74,11 +74,11 @@ class NiryoOneEnv(gym.Env):
         self._set_cameras()
 
         self.reward_range = (-float("inf"), float("inf"))
-        self.action_space = spaces.Box(low=-10.0, high=10.0, shape=(5,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(5,), dtype=np.float32)
 
         # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
 
-        # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 4), dtype=np.uint8)
 
         # Two images in dict
         # self.observation_space = spaces.Dict(
@@ -89,12 +89,12 @@ class NiryoOneEnv(gym.Env):
         # )
 
         # Image and depth dict
-        self.observation_space = spaces.Dict(
-            spaces={
-                "realsense_vision": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
-                "realsense_depth": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
-            }
-        )
+        # self.observation_space = spaces.Dict(
+        #     spaces={
+        #         "realsense_vision": spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8),
+        #         "realsense_depth": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
+        #     }
+        # )
 
         gym.Env.__init__(self)
 
@@ -150,8 +150,10 @@ class NiryoOneEnv(gym.Env):
 
         addon_reward = (1/test_reward) if (1/test_reward) < 0.5 else -(1/test_reward)
 
-        reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
-        
+        # reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
+
+        reward = (previous_dist_to_goal - current_dist_to_goal)
+
         # increase reward for being closer to the cube
         # reward = (previous_dist_to_goal - current_dist_to_goal) + (10/test_reward)
 
@@ -203,6 +205,8 @@ class NiryoOneEnv(gym.Env):
 
         gt_depth = np.multiply(gt["depth"][:, :], 100)
 
+        # print(gt["depth"][:, :])
+
         return np.dstack((gt["rgb"][:, :, :3], gt_depth))
 
 
@@ -233,7 +237,7 @@ class NiryoOneEnv(gym.Env):
         camera_1.GetClippingRangeAttr().Set((0.01, 10000))
         camera_1.GetHorizontalApertureAttr().Set(69.4)
         camera_1.GetVerticalApertureAttr().Set(42.5)
-        camera_1.GetFocalLengthAttr().Set(50)
+        camera_1.GetFocalLengthAttr().Set(60)
         camera_1.GetFocusDistanceAttr().Set(30)
 
         camera_path_2 = "/niryo_one/camera_link/end_effector_camera"

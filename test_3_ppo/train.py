@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test", default=False, action="store_true", help="Run in test mode")
 args, unknown = parser.parse_known_args()
 
-log_dir = "./mip_policy5"
+log_dir = "./mip_policy6"
 # set headles to false to visualize training
 my_env = NiryoOneEnv(headless=True)
 # my_env = make_vec_env(NiryoOneEnv, n_envs=4, env_kwargs=dict(headless=False))
@@ -22,7 +22,7 @@ policy_kwargs = dict(activation_fn=th.nn.Tanh, net_arch=[16, dict(pi=[64, 32], v
 policy = CnnPolicy
 # policy = MultiInputPolicy
 
-total_timesteps = 500000
+total_timesteps = 5000000
 
 if args.test is True:
     total_timesteps = 10000
