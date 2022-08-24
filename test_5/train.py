@@ -10,7 +10,7 @@ import torch as th
 simconfig = SimConfig()
 
 from omni.isaac.gym.vec_env import VecEnvBase
-env = VecEnvBase(headless=False)
+env = VecEnvBase(headless=True)
 
 from task import NiryoOneTask
 task = NiryoOneTask(name="NiryoOne", sim_config=simconfig, env=env)

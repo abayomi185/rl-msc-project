@@ -19,8 +19,8 @@ my_env = NiryoOneEnv(headless=True)
 policy_kwargs = dict(activation_fn=th.nn.Tanh, net_arch=[16, dict(pi=[64, 32], vf=[64, 32])])
 
 # TODO - Policy important for observation space
-# policy = CnnPolicy
-policy = MultiInputPolicy
+policy = CnnPolicy
+# policy = MultiInputPolicy
 
 total_timesteps = 5000000
 
@@ -43,6 +43,12 @@ model = PPO(
     max_grad_norm=10,
     tensorboard_log=log_dir,
 )
+
+
+# policy_dir = "./mip_policy7/niryo_policy_checkpoint_"
+# poliicy_path = "790000_steps"
+# model.load(policy_dir + poliicy_path)
+
 model.learn(total_timesteps=total_timesteps, callback=[checkpoint_callback])
 
 model.save(log_dir + "/niryo_policy")

@@ -78,7 +78,7 @@ class NiryoOneEnv(gym.Env):
 
         # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
 
-        # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 4), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 2), dtype=np.uint8)
 
         # Two images in dict
         # self.observation_space = spaces.Dict(
@@ -98,12 +98,12 @@ class NiryoOneEnv(gym.Env):
 
         # Image and robot joints
         # Testing with red channel of rgb only
-        self.observation_space = spaces.Dict(
-            spaces={
-                "vision": spaces.Box(low=0, high=255, shape=(256, 256, 2), dtype=np.uint8),
-                "robot_joints": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
-            }
-        )
+        # self.observation_space = spaces.Dict(
+        #     spaces={
+        #         "vision": spaces.Box(low=0, high=255, shape=(256, 256, 2), dtype=np.uint8),
+        #         "robot_joints": spaces.Box(low=0, high=255, shape=(5, ), dtype=np.uint8),
+        #     }
+        # )
 
         gym.Env.__init__(self)
 
@@ -149,6 +149,8 @@ class NiryoOneEnv(gym.Env):
 
         test_reward = np.linalg.norm(goal_arm_position - current_arm_position)
 
+        # print(test_reward)
+
         # print("+++++++++++")
         # print("diff")
         # print(previous_dist_to_goal)
@@ -157,7 +159,7 @@ class NiryoOneEnv(gym.Env):
 
         # reward = (previous_dist_to_goal - current_dist_to_goal)
 
-        addon_reward = (0.01/test_reward)
+        addon_reward = (0.01/test_reward) if test_reward < 0.2 else -(test_reward * 10)
         # reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
 
         reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
@@ -221,10 +223,12 @@ class NiryoOneEnv(gym.Env):
 
         # return np.dstack((gt["rgb"][:, :, :3], gt_depth))
 
-        return {
-            "vision": gt_rxx_d,
-            "arm_positions": robot_joints
-        }
+        return gt_rxx_d
+
+        # return {
+        #     "vision": gt_rxx_d,
+        #     "robot_joints": robot_joints
+        # }
 
 
     def render(self, mode="human"):

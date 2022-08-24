@@ -1,9 +1,9 @@
 from env import NiryoOneEnv
 from stable_baselines3 import PPO
 
-policy_dir = "./mip_policy6/niryo_policy_checkpoint_"
+policy_dir = "./mip_policy7/niryo_policy_checkpoint_"
 
-poliicy_path = "1440000_steps"
+poliicy_path = "790000_steps"
 
 my_env = NiryoOneEnv(headless=False)
 model = PPO.load(policy_dir + poliicy_path)

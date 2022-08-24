@@ -17,4 +17,6 @@ mip_policy5 - CNNPolicy with concatenated image and depth. Reward is changed as 
 
 mip_policy6 - Back to basic reward from JetBot
 
-mip_policy7 - Slight tweak to reward, included robot arm position in observation and using only red channel of image.
+mip_policy7 - Slight tweak to reward, included robot arm position in observation and using only red channel of image. Also continues learning from PPO2 to PPO3 @790000
+
+mip_policy8 - CNNPolicy with tweaks to reward to introduce more penalties
