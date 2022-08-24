@@ -78,7 +78,7 @@ class NiryoOneEnv(gym.Env):
 
         # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 3), dtype=np.uint8)
 
-        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 4), dtype=np.uint8)
+        # self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 4), dtype=np.uint8)
 
         # Two images in dict
         # self.observation_space = spaces.Dict(
@@ -95,6 +95,15 @@ class NiryoOneEnv(gym.Env):
         #         "realsense_depth": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
         #     }
         # )
+
+        # Image and robot joints
+        # Testing with red channel of rgb only
+        self.observation_space = spaces.Dict(
+            spaces={
+                "vision": spaces.Box(low=0, high=255, shape=(256, 256, 2), dtype=np.uint8),
+                "robot_joints": spaces.Box(low=0, high=255, shape=(256, 256), dtype=np.uint8),
+            }
+        )
 
         gym.Env.__init__(self)
 
@@ -148,11 +157,10 @@ class NiryoOneEnv(gym.Env):
 
         # reward = (previous_dist_to_goal - current_dist_to_goal)
 
-        addon_reward = (1/test_reward) if (1/test_reward) < 0.5 else -(1/test_reward)
-
+        addon_reward = (0.01/test_reward)
         # reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
 
-        reward = (previous_dist_to_goal - current_dist_to_goal)
+        reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
 
         # increase reward for being closer to the cube
         # reward = (previous_dist_to_goal - current_dist_to_goal) + (10/test_reward)
@@ -184,6 +192,8 @@ class NiryoOneEnv(gym.Env):
             ["rgb", "depth"], self.viewport_window, verify_sensor_init=False, wait_for_sensor_data=0
         )
 
+        robot_joints = self.niryo.get_arm_positions()
+
         # gt = self.sd_helper.get_groundtruth(
         #     ["rgb"], self.viewport_window_2, verify_sensor_init=False, wait_for_sensor_data=0
         # )
@@ -203,11 +213,18 @@ class NiryoOneEnv(gym.Env):
         #     "realsense_depth": gt["depth"][:, :]
         # }
 
-        gt_depth = np.multiply(gt["depth"][:, :], 100)
+        # gt_depth = np.multiply(gt["depth"][:, :], 100)
 
         # print(gt["depth"][:, :])
 
-        return np.dstack((gt["rgb"][:, :, :3], gt_depth))
+        gt_rxx_d = np.dstack((gt["rgb"][:, :, :1], gt["depth"][:, :]))
+
+        # return np.dstack((gt["rgb"][:, :, :3], gt_depth))
+
+        return {
+            "vision": gt_rxx_d,
+            "arm_positions": robot_joints
+        }
 
 
     def render(self, mode="human"):

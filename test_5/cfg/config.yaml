@@ -38,6 +38,10 @@ checkpoint: ''
 # disables rendering
 headless: False
 
+task:
+  env:
+    random_key: random_value
+
 # set default task and default training config based on task
 defaults:
   - task: Cartpole

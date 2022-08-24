@@ -16,3 +16,5 @@ mip_policy4 - reward function -> reward = `1 / (test_reward ** 2)`
 mip_policy5 - CNNPolicy with concatenated image and depth. Reward is changed as well
 
 mip_policy6 - Back to basic reward from JetBot
+
+mip_policy7 - Slight tweak to reward, included robot arm position in observation and using only red channel of image.

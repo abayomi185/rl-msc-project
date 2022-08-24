@@ -84,7 +84,7 @@ class Value(DeterministicModel):
 
 # Load and wrap the JetBot environment (a subclass of Gym)
 
-gym.make()
+# gym.make()
 
 env = NiryoOneEnv(headless=True)
 env = wrap_env(env)

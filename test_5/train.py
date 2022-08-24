@@ -1,38 +1,32 @@
-from env import NiryoOneEnv
+from config import SimConfig
+
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import CnnPolicy
 from stable_baselines3.ppo import MultiInputPolicy
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.env_util import make_vec_env
 import torch as th
-import argparse
 
-from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
+simconfig = SimConfig()
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--test", default=False, action="store_true", help="Run in test mode")
-args, unknown = parser.parse_known_args()
+from omni.isaac.gym.vec_env import VecEnvBase
+env = VecEnvBase(headless=False)
 
-log_dir = "./mip_policy4"
-# set headles to false to visualize training
-my_env = NiryoOneEnv(headless=True)
-# my_env = make_vec_env(NiryoOneEnv, n_envs=4, env_kwargs=dict(headless=False))
+from task import NiryoOneTask
+task = NiryoOneTask(name="NiryoOne", sim_config=simconfig, env=env)
+
+log_dir = "./mip_policy7"
 
 policy_kwargs = dict(activation_fn=th.nn.Tanh, net_arch=[16, dict(pi=[64, 32], vf=[64, 32])])
 
-# TODO - Policy important for observation space
-# policy = CnnPolicy
-policy = MultiInputPolicy
+policy = CnnPolicy
 
-total_timesteps = 10000000
-
-if args.test is True:
-    total_timesteps = 10000
+total_timesteps = 5000000
 
 checkpoint_callback = CheckpointCallback(save_freq=10000, save_path=log_dir, name_prefix="niryo_policy_checkpoint")
 model = PPO(
     policy,
-    my_env,
+    env,
     policy_kwargs=policy_kwargs,
     verbose=1,
     n_steps=10000,
@@ -49,4 +43,4 @@ model.learn(total_timesteps=total_timesteps, callback=[checkpoint_callback])
 
 model.save(log_dir + "/niryo_policy")
 
-my_env.close()
+env.close()
