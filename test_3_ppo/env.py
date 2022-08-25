@@ -159,10 +159,10 @@ class NiryoOneEnv(gym.Env):
 
         # reward = (previous_dist_to_goal - current_dist_to_goal)
 
-        addon_reward = (0.01/test_reward) if test_reward < 0.2 else -(test_reward * 10)
+        addon_reward = (0.01/test_reward) if test_reward < 0.2 else -(test_reward * 1)
         # reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
 
-        reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
+        reward = (previous_dist_to_goal - current_dist_to_goal)
 
         # increase reward for being closer to the cube
         # reward = (previous_dist_to_goal - current_dist_to_goal) + (10/test_reward)
@@ -219,6 +219,7 @@ class NiryoOneEnv(gym.Env):
 
         # print(gt["depth"][:, :])
 
+        # gt_rgb_d = np.dstack((gt["rgb"][:, :, :3], gt["depth"][:, :]))
         gt_rxx_d = np.dstack((gt["rgb"][:, :, :1], gt["depth"][:, :]))
 
         # return np.dstack((gt["rgb"][:, :, :3], gt_depth))
