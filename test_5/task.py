@@ -206,13 +206,13 @@ class NiryoOneView(ArticulationView):
             name=name,
         )
 
+        self.sd_helper = SyntheticDataHelper()
+
         self._base_grippers = RigidPrimView(prim_paths_expr="/World/envs/.*/niryo_one/base_gripper_1", name="finger_view")
 
     def get_camera_ground_truths(self, indices=None):
         indices = self._backend_utils.resolve_indices(indices, self.count, self._device)
-        camera_groundtruths = self._backend_utils.create_zeros_tensor([indices.shape[0], 256, 256, 4], dtype="float32", device=self._device)
-
-        self.sd_helper = SyntheticDataHelper()
+        camera_groundtruths = self._backend_utils.create_zeros_tensor([indices.shape[0], 256, 256, 4], dtype="float32", device=self._device)        
 
         write_idx = 0
         for i in indices:
@@ -224,16 +224,16 @@ class NiryoOneView(ArticulationView):
             
             gt = self.sd_helper.get_groundtruth(
                 ["rgb", "depth"], 
-                viewport_window, 
+                viewport_window,
                 verify_sensor_init=False, wait_for_sensor_data=0
                 )
             gt_depth = np.multiply(gt["depth"][:, :], 100)
-            
+
             camera_groundtruths[write_idx] = np.dstack((gt["rgb"][:, :, :3], gt_depth))
 
             write_idx += 1
         return camera_groundtruths
-    
+
     @property
     def actuated_dof_indices(self):
         return self._actuated_dof_indices
@@ -251,6 +251,3 @@ class NiryoOneView(ArticulationView):
         for joint_name in self.actuated_joint_names:
             self._actuated_dof_indices.append(self.get_dof_index(joint_name))
         self._actuated_dof_indices.sort()
-
-
-

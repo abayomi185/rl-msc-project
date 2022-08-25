@@ -159,10 +159,16 @@ class NiryoOneEnv(gym.Env):
 
         # reward = (previous_dist_to_goal - current_dist_to_goal)
 
-        addon_reward = (0.01/test_reward) if test_reward < 0.2 else -(test_reward * 1)
         # reward = (previous_dist_to_goal - current_dist_to_goal) + addon_reward
 
         reward = (previous_dist_to_goal - current_dist_to_goal)
+
+        if reward > 0:
+            addon_reward = (0.01/test_reward)
+        else:
+            addon_reward = 0
+
+        reward = reward + addon_reward
 
         # increase reward for being closer to the cube
         # reward = (previous_dist_to_goal - current_dist_to_goal) + (10/test_reward)
