@@ -1,6 +1,8 @@
-# MSc Deep Reinforcement Learning using Isaac ~~Gym~~
+# MSc Deep Reinforcement Learning using Isaac Gym
 
-## Notes
+See [Full Report](https://github.com/abayomi185/link-hub/blob/main/public/MSc_Report_coao6.pdf)
+
+## Misc Notes
 Add Articulation root to the base of the robot;
 See https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/tutorial_gui_simple_robot.html
 
