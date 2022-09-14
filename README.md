@@ -1,6 +1,11 @@
-# MSc Deep Reinforcement Learning using Isaac Gym
+# Deep Reinforcement Learning for Robotics using Nvidia Omniverse Isaac Gym
 
-See [Full Report](https://github.com/abayomi185/link-hub/blob/main/public/MSc_Report_coao6.pdf)
+### See [Full Report](https://github.com/abayomi185/link-hub/blob/main/public/MSc_Report_coao6.pdf) of this project.
+
+## Video Presentation
+https://user-images.githubusercontent.com/21103047/190185240-7de276e2-61ad-4d5f-9fd4-f08e1a60a3cf.mov
+
+### Alternative [YouTube link](https://youtu.be/Eask4lYFeGY)
 
 ## Misc Notes
 Add Articulation root to the base of the robot;
